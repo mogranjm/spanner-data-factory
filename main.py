@@ -8,6 +8,7 @@ from config import SPANNER_INSTANCE, SPANNER_DATABASE
 
 def get_random_user() -> dict:
     user = RandomUser()
+
     return {
         'fname': user.get_first_name(),
         'lname': user.get_last_name(),
@@ -26,6 +27,10 @@ def get_random_user() -> dict:
 
 def insert_random_user(event, context):
     user = get_random_user()
+    user_data = f"{hash(user['fname'] + user['lname'])}, " \
+                f"'{user['fname']}', '{user['lname']}', '{user['username']}', '{user['phone']}', '{user['email']}', " \
+                f"'{user['addr_street']}', '{user['addr_city']}', '{user['addr_state']}', '{user['addr_country']}', '{user['addr_pc']}', " \
+                f"DATE('{user['registered']}'), {user['subscribed']}"
 
     wrench = spanner.Client()
     instance = wrench.instance(SPANNER_INSTANCE)
@@ -34,15 +39,24 @@ def insert_random_user(event, context):
     def insert(transaction):
         row_ct = transaction.execute_update(
             "INSERT Customers ("
+            "CustomerID,"
             "fname, lname, username, phone, email, "
             "addr_street, addr_city, addr_state, addr_country, addr_pc,"
             "registered, subscribed"
-            ") VALUES ("
-            f"{user['fname']}, {user['lname']}, {user['username']}, {user['phone']}, {user['email']}, "
-            f"{user['addr_street']}, {user['addr_city']}, {user['addr_state']}, {user['addr_country']}, {user['addr_pc']}, "
-            f"{user['registered']}, {user['subscribed']}"
-            ")"
+            f") VALUES ({user_data});"
+            # params=user,
+            # param_types={
+            #     k: spanner.param_types.STRING
+            #     if k != 'subscribed' else spanner.param_types.BOOL
+            #     for k in user.keys()
+            # }
         )
         print(f"{row_ct} record(s) inserted.")
 
     database.run_in_transaction(insert)
+
+
+if __name__ == "__main__":
+    event = ''
+    context = ''
+    insert_random_user(event, context)
