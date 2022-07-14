@@ -44,19 +44,7 @@ def insert_random_user(event, context):
             "addr_street, addr_city, addr_state, addr_country, addr_pc,"
             "registered, subscribed"
             f") VALUES ({user_data});"
-            # params=user,
-            # param_types={
-            #     k: spanner.param_types.STRING
-            #     if k != 'subscribed' else spanner.param_types.BOOL
-            #     for k in user.keys()
-            # }
         )
         print(f"{row_ct} record(s) inserted.")
 
     database.run_in_transaction(insert)
-
-
-if __name__ == "__main__":
-    event = ''
-    context = ''
-    insert_random_user(event, context)
